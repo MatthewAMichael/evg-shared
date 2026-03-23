@@ -54,6 +54,8 @@ function scoreToBand(n) {
 const inv = r => r==="BUY" ? C.green : r==="WATCH" ? C.gold : C.red;
 // dimension score colour (low score = under-realised = opportunity)
 const sc = s => s >= 70 ? C.green : s >= 40 ? C.gold : C.red;
+// For dimension scores: low = big gap = opportunity. Use a neutral scale.
+const dimColor = s => s >= 70 ? C.green : s >= 40 ? C.gold : C.red;
 const clamp = (v,a,b) => Math.min(b,Math.max(a,v));
 const fmt = d => new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"});
 
@@ -124,7 +126,7 @@ Draw on Twitter/X, Reddit, Instagram, Facebook, Trustpilot, App Store for sentim
 
 Return ONLY valid JSON. No markdown. No code fences. Start { end }.
 
-{"company":string,"ticker":string,"sector":string,"marketCap":string,"enterpriseValue":string,"investmentSignal":"BUY"|"WATCH"|"PASS","confidenceLevel":"HIGH"|"MEDIUM"|"LOW","overallScore":int,"executiveSummary":string,"customerStrategyScore":int,"brandEquityScore":int,"commercialScore":int,"dimensions":{"sentiment":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"social":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"reviews":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"brand":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"financial":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"analyst":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string}},"customerProfile":{"estimatedCustomerBase":string,"npsEstimate":string,"satisfactionLevel":"HIGH"|"MEDIUM"|"LOW","loyaltyStrength":"STRONG"|"MODERATE"|"WEAK","communityEngagement":"HIGH"|"MEDIUM"|"LOW","audienceInsight":string},"capabilityGaps":[{"domain":string,"severity":"CRITICAL"|"SIGNIFICANT"|"MODERATE","currentState":string,"potentialState":string,"interventions":[string],"revenueUplift":string,"costReduction":string,"investmentRequired":string,"timeHorizon":"0-12 months"|"1-2 years"|"2-4 years","kpiTargets":string,"benchmarkReference":string}],"valueBridgeModel":{"currentEVEstimate":string,"potentialEVEstimate":string,"totalUpliftEstimate":string,"revenueGrowthComponent":string,"costEfficiencyComponent":string,"brandMultipleExpansion":string,"totalInvestmentRequired":string,"paybackPeriod":string,"directionalIRR":string,"acquisitionPriceGuidance":string,"valuationRationale":string},"catalysts":[string],"risks":[string],"investmentThesis":string,"peerBenchmarks":[{"company":string,"score":int,"score":int,"note":string}],"priorityRoadmap":[{"phase":string,"horizon":string,"initiatives":[string],"expectedValue":string}]}
+{"company":string,"ticker":string,"sector":string,"marketCap":string,"enterpriseValue":string,"investmentScore": integer 0-100 (100=buy immediately, 0=avoid entirely),"confidenceLevel":"HIGH"|"MEDIUM"|"LOW","overallScore":int,"executiveSummary":string,"customerStrategyScore":int,"brandEquityScore":int,"commercialScore":int,"dimensions":{"sentiment":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"social":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"reviews":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"brand":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"financial":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"analyst":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string}},"customerProfile":{"estimatedCustomerBase":string,"npsEstimate":string,"satisfactionLevel":"HIGH"|"MEDIUM"|"LOW","loyaltyStrength":"STRONG"|"MODERATE"|"WEAK","communityEngagement":"HIGH"|"MEDIUM"|"LOW","audienceInsight":string},"capabilityGaps":[{"domain":string,"severity":"CRITICAL"|"SIGNIFICANT"|"MODERATE","currentState":string,"potentialState":string,"interventions":[string],"revenueUplift":string,"costReduction":string,"investmentRequired":string,"timeHorizon":"0-12 months"|"1-2 years"|"2-4 years","kpiTargets":string,"benchmarkReference":string}],"valueBridgeModel":{"currentEVEstimate":string,"potentialEVEstimate":string,"totalUpliftEstimate":string,"revenueGrowthComponent":string,"costEfficiencyComponent":string,"brandMultipleExpansion":string,"totalInvestmentRequired":string,"paybackPeriod":string,"directionalIRR":string,"acquisitionPriceGuidance":string,"valuationRationale":string},"catalysts":[string],"risks":[string],"investmentThesis":string,"peerBenchmarks":[{"company":string,"score":int,"score":int,"note":string}],"priorityRoadmap":[{"phase":string,"horizon":string,"initiatives":[string],"expectedValue":string}]}
 
 INVESTMENT SCORE: Rate 0-100 where 100 = buy immediately with maximum confidence, 0 = avoid entirely.
 - 70-100 = BUY: Strong customer value gap with clear unlock path, motivated management, realistic financials
@@ -405,17 +407,19 @@ export default function App() {
         setLoading(false);
         try{
           const parsed=JSON.parse(text.replace(/```json|```/g,"").trim());
-          // Map investmentScore (0-100) to investmentSignal for backwards compat
-          if (parsed.investmentScore !== undefined && !parsed.investmentSignal) {
-            parsed.investmentSignal = scoreToBand(parsed.investmentScore);
-          }
-          // Use investmentScore as the primary score if present
-          if (parsed.investmentScore !== undefined) {
-            parsed.overallScore = parsed.investmentScore;
-          }
+          // investmentScore (0-100) is Claude's PE rating — use it as the primary score
+          // Keep investmentSignal as the band label derived from investmentScore
+          const invScore = parsed.investmentScore !== undefined
+            ? Math.max(0, Math.min(100, parsed.investmentScore))
+            : parsed.investmentSignal === "BUY" ? 72
+            : parsed.investmentSignal === "WATCH" ? 52
+            : 25;
+          parsed.investmentScore = invScore;
+          parsed.investmentSignal = scoreToBand(invScore);
+          parsed.overallScore = invScore;
           const id=Date.now().toString();
           const ws=weightedScore(parsed.dimensions);
-          const entry={...parsed,id,analysedAt:Date.now(),weightedScore:ws,scoreHistory:[ws]};
+          const entry={...parsed,id,analysedAt:Date.now(),weightedScore:ws,scoreHistory:[invScore]};
           setAnalyses(prev=>{
             const idx=prev.findIndex(a=>a.company.toLowerCase()===parsed.company.toLowerCase());
             if(idx>=0){
@@ -559,7 +563,7 @@ export default function App() {
                   borderRadius:5,marginBottom:3,cursor:"pointer",
                   transition:"all 0.15s",display:"block"}}>
                 <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:5}}>
-                  <ScoreBadge score={a.weightedScore||a.overallScore} size={36}
+                  <ScoreBadge score={a.investmentScore||a.overallScore} size={36}
                     signal={a.investmentSignal}/>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontWeight:600,fontSize:12,color:C.textHi,
@@ -570,13 +574,13 @@ export default function App() {
                   </div>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
                     {watchlist.includes(a.id)&&<span style={{color:C.gold,fontSize:11}}>★</span>}
-                    <Spark values={a.scoreHistory} color={scoreToColor(a.overallScore||a.weightedScore||50)}
+                    <Spark values={a.scoreHistory} color={scoreToColor(a.investmentScore||a.overallScore||50)}
                       width={36} height={15}/>
                   </div>
                 </div>
                 <div style={{display:"flex",gap:5,alignItems:"center"}}>
                   <Tag label={a.investmentSignal||"—"}
-                    color={scoreToColor(a.overallScore||a.weightedScore||50)}/>
+                    color={scoreToColor(a.investmentScore||a.overallScore||50)}/>
                   {a.valueBridgeModel?.totalUpliftEstimate&&(
                     <Tag label={a.valueBridgeModel.totalUpliftEstimate} color={C.green}/>
                   )}
@@ -708,10 +712,11 @@ export default function App() {
 // ANALYSIS VIEW
 // ═══════════════════════════════════════════════════════════════════════════
 function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds,setCompareIds}) {
-  const ws=r.weightedScore||r.overallScore;
+  // investmentScore is Claude's 0-100 PE rating — use this as the primary display score
+  const ws=r.investmentScore||r.overallScore||r.weightedScore||50;
   const inWatch=watchlist.includes(r.id);
   const inCompare=compareIds.includes(r.id);
-  const sig=r.investmentSignal||"WATCH";
+  const sig=r.investmentSignal||scoreToBand(ws)||"WATCH";
   const vb=r.valueBridgeModel||{};
   const cp=r.customerProfile||{};
 
@@ -777,7 +782,7 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
               <span style={{fontFamily:"DM Mono",fontSize:16,fontWeight:700,color:sc(score)}}>{score}</span>
             </div>
             <Meter value={score} color={scoreToColor(score)}/>
-            <p style={{marginTop:6,fontSize:10,color:C.muted,lineHeight:1.5}}>{desc}</p>
+            <p style={{marginTop:6,fontSize:9,color:C.muted,lineHeight:1.5,fontStyle:"italic"}}>{desc}</p>
           </div>
         ))}
       </div>
@@ -1184,7 +1189,7 @@ function WatchlistView({analyses,watchlist,setWatchlist,alerts,setAlerts,setActi
               </button>
             </div>
             <Meter value={a.weightedScore||a.overallScore}
-              color={scoreToColor(a.overallScore||a.weightedScore||50)} height={3}/>
+              color={scoreToColor(a.investmentScore||a.overallScore||50)} height={3}/>
             <div style={{display:"flex",justifyContent:"space-between",
               alignItems:"center",marginTop:9}}>
               <SignalBadge signal={a.investmentSignal||"WATCH"}/>
@@ -1192,7 +1197,7 @@ function WatchlistView({analyses,watchlist,setWatchlist,alerts,setAlerts,setActi
                 <Tag label={a.valueBridgeModel.totalUpliftEstimate} color={C.green}/>
               )}
               <Spark values={a.scoreHistory}
-                color={scoreToColor(a.overallScore||a.weightedScore||50)} width={55} height={18}/>
+                color={scoreToColor(a.investmentScore||a.overallScore||50)} width={55} height={18}/>
             </div>
           </div>
         ))}
@@ -1219,7 +1224,7 @@ function CompareView({analyses,compareIds,setCompareIds,weights}) {
       <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:22}}>
         {analyses.map(a=>(
           <Pill key={a.id} label={a.company} active={compareIds.includes(a.id)}
-            color={scoreToColor(a.overallScore||a.weightedScore||50)}
+            color={scoreToColor(a.investmentScore||a.overallScore||50)}
             onClick={()=>setCompareIds(c=>c.includes(a.id)?
               c.filter(x=>x!==a.id):[...c.slice(-2),a.id])}/>
         ))}
