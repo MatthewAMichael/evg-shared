@@ -969,120 +969,138 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
         </>
       )}
 
-      {/* GAP VISUALISER — 7 dimensions */}
+      {/* GAP VISUALISER — league table */}
       {r.gapAnalysis&&(
         <>
           <Divider title="OPPORTUNITY GAP ANALYSIS"/>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
-          {[
-            ["Customer Strategy",     r.gapAnalysis.customerStrategy,  C.accent],
-            ["Brand Equity",          r.gapAnalysis.brandEquity,       C.purple],
-            ["Commercial Execution",  r.gapAnalysis.commercial,         C.accentB],
-          ].map(([label, g, col])=> g ? (
-            <GapCard key={label} label={label} g={g} col={col}/>
-          ) : null)}
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-          {[
-            ["Digital & Cx",          r.gapAnalysis.digital,            C.gold],
-            ["Data & Personalisation",r.gapAnalysis.dataPersonalisation, C.orange],
-          ].map(([label, g, col])=> g ? (
-            <GapCard key={label} label={label} g={g} col={col}/>
-          ) : null)}
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
-          {[
-            ["Service & Retention",   r.gapAnalysis.serviceRetention,   C.green],
-            ["Community & Advocacy",  r.gapAnalysis.communityAdvocacy,  C.accentB],
-          ].map(([label, g, col])=> g ? (
-            <GapCard key={label} label={label} g={g} col={col}/>
-          ) : null)}
-          </div>
-        </>
-      )}
-
-      {/* PRIORITY ROADMAP */}
-      {(r.priorityRoadmap||[]).length>0&&(
-        <>
-          <Divider title="TRANSFORMATION ROADMAP"/>
-          <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(r.priorityRoadmap.length,3)},1fr)`,
-            gap:10,marginBottom:18}}>
-            {r.priorityRoadmap.map((phase,i)=>(
-              <div key={i} style={{background:C.surface,
-                border:`1px solid ${i===0?C.accent+"44":i===1?C.gold+"44":C.purple+"44"}`,
-                borderRadius:7,overflow:"hidden"}}>
-                {/* Phase header band */}
-                <div style={{background:i===0?C.accentDim:i===1?C.goldDim:C.purpleDim,
-                  padding:"10px 14px",borderBottom:`1px solid ${C.border}`}}>
-                  <div style={{display:"flex",alignItems:"center",
-                    justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <div style={{width:6,height:6,borderRadius:"50%",flexShrink:0,
-                        background:i===0?C.accent:i===1?C.gold:C.purple}}/>
-                      <span style={{fontFamily:"DM Mono",fontSize:9,letterSpacing:1.5,
-                        color:i===0?C.accent:i===1?C.gold:C.purple,
-                        textTransform:"uppercase"}}>{phase.horizon}</span>
-                    </div>
-                    {phase.expectedValue&&(
-                      <span style={{fontFamily:"DM Mono",fontSize:9,
-                        color:C.green,background:C.greenDim,
-                        padding:"2px 8px",borderRadius:3,
-                        border:`1px solid ${C.green}33`,
-                        whiteSpace:"nowrap",overflow:"hidden",
-                        textOverflow:"ellipsis",maxWidth:200}}>
-                        {phase.expectedValue}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{fontWeight:600,fontSize:13,color:C.textHi,
-                    marginTop:6,lineHeight:1.3}}>
-                    {/* Strip any "(Months X-Y)" text Claude might add to phase name */}
-                    {(phase.phase||"").replace(/\s*\(months?\s*[\d\-]+\)/gi,"").trim()}
-                  </div>
-                </div>
-                {/* Initiatives */}
-                <div style={{padding:"12px 14px"}}>
-                  {(phase.initiatives||[]).length > 0
-                    ? (phase.initiatives||[]).map((init,j)=>(
-                        <div key={j} style={{display:"flex",gap:8,
-                          marginBottom:j<(phase.initiatives.length-1)?10:0,
-                          alignItems:"flex-start"}}>
-                          <div style={{width:4,height:4,borderRadius:"50%",flexShrink:0,
-                            marginTop:5,
-                            background:i===0?C.accent:i===1?C.gold:C.purple}}/>
-                          <span style={{fontSize:12,color:C.text,lineHeight:1.6}}>{init}</span>
-                        </div>
-                      ))
-                    : <p style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>
-                        No initiatives specified
-                      </p>
-                  }
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* CATALYSTS / RISKS */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
-        {[["VALUE CATALYSTS",r.catalysts||[],C.green,"↑"],
-          ["KEY RISKS",r.risks||[],C.red,"↓"]].map(([title,items,col,arrow])=>(
-          <div key={title}>
-            <Divider title={title}/>
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,
-              borderRadius:6,padding:"11px 14px"}}>
-              {items.map((item,i)=>(
-                <div key={i} style={{display:"flex",gap:7,marginBottom:7,
-                  fontSize:12,color:C.text,lineHeight:1.6}}>
-                  <span style={{color:col,flexShrink:0}}>{arrow}</span>{item}
-                </div>
+          <div style={{background:C.surface,border:`1px solid ${C.border}`,
+            borderRadius:8,overflow:"hidden",marginBottom:18}}>
+            {/* Column headers */}
+            <div style={{display:"grid",
+              gridTemplateColumns:"180px 1fr 80px 52px 100px",
+              gap:0,padding:"8px 16px",
+              borderBottom:`1px solid ${C.border}`,
+              background:C.surfaceHi}}>
+              {["DIMENSION","GAP VISUALISATION","CURRENT → POTENTIAL","GAP","SIGNAL"].map(h=>(
+                <div key={h} style={{fontSize:8,fontFamily:"DM Mono",
+                  color:C.muted,letterSpacing:1.5}}>{h}</div>
               ))}
             </div>
+            {/* Rows */}
+            {[
+              ["Customer Strategy",    r.gapAnalysis.customerStrategy,  C.accent],
+              ["Brand Equity",         r.gapAnalysis.brandEquity,       C.purple],
+              ["Commercial Execution", r.gapAnalysis.commercial,        C.accentB],
+              ["Digital & CX",         r.gapAnalysis.digital,           C.gold],
+              ["Data & Personalisation",r.gapAnalysis.dataPersonalisation,C.orange],
+              ["Service & Retention",  r.gapAnalysis.serviceRetention,  C.green],
+              ["Community & Advocacy", r.gapAnalysis.communityAdvocacy, C.accentB],
+            ].filter(([,g])=>g).map(([label,g,col],i)=>{
+              const gapCol = g.gapLabel==="LARGE"?C.green:g.gapLabel==="MEDIUM"?C.gold:C.muted;
+              const gap = Math.max(0, g.potential - g.current);
+              return (
+                <div key={label}>
+                  <div style={{display:"grid",
+                    gridTemplateColumns:"180px 1fr 80px 52px 100px",
+                    gap:0,padding:"12px 16px",alignItems:"center",
+                    borderBottom:`1px solid ${C.border}`,
+                    transition:"background 0.15s"}}
+                    className="hov">
+                    {/* Dimension name */}
+                    <div style={{fontSize:11,fontWeight:500,color:C.textHi,
+                      paddingRight:12}}>{label}</div>
+                    {/* Stacked bar */}
+                    <div style={{paddingRight:16}}>
+                      <div style={{position:"relative",height:8,
+                        background:C.border,borderRadius:4,overflow:"hidden"}}>
+                        {/* Potential bar (background) */}
+                        <div style={{position:"absolute",left:0,top:0,
+                          width:`${g.potential}%`,height:"100%",
+                          background:col+"28",borderRadius:4}}/>
+                        {/* Current bar (foreground) */}
+                        <div style={{position:"absolute",left:0,top:0,
+                          width:`${g.current}%`,height:"100%",
+                          background:`linear-gradient(90deg,${col}88,${col})`,
+                          borderRadius:4}}/>
+                        {/* Gap indicator line */}
+                        <div style={{position:"absolute",
+                          left:`${g.current}%`,top:0,
+                          width:`${gap}%`,height:"100%",
+                          background:gapCol+"33",
+                          borderLeft:`2px solid ${gapCol}`,
+                          borderRight:`2px solid ${gapCol}66`}}/>
+                      </div>
+                    </div>
+                    {/* Current → Potential */}
+                    <div style={{fontFamily:"DM Mono",fontSize:10,
+                      color:C.muted,whiteSpace:"nowrap"}}>
+                      <span style={{color:col}}>{g.current}</span>
+                      <span style={{color:C.muted}}> → </span>
+                      <span style={{color:col,fontWeight:600}}>{g.potential}</span>
+                    </div>
+                    {/* Gap pts */}
+                    <div style={{fontFamily:"DM Mono",fontSize:12,
+                      fontWeight:700,color:gapCol}}>+{gap}</div>
+                    {/* Signal badge */}
+                    <div style={{display:"flex",alignItems:"center"}}>
+                      <span style={{fontSize:9,fontFamily:"DM Mono",
+                        fontWeight:700,padding:"3px 8px",borderRadius:3,
+                        letterSpacing:1,background:gapCol+"18",
+                        color:gapCol,border:`1px solid ${gapCol}33`}}>
+                        {g.gapLabel} GAP
+                      </span>
+                    </div>
+                  </div>
+                  {/* Reason row — indented below */}
+                  <div style={{padding:"0 16px 10px 16px",
+                    borderBottom: i < 6 ? `1px solid ${C.border}` : "none"}}>
+                    <p style={{fontSize:11,color:C.muted,lineHeight:1.55,
+                      paddingLeft:0}}>{g.gapReason}</p>
+                  </div>
+                </div>
+              );
+            })}
+            {/* Summary footer */}
+            <div style={{padding:"10px 16px",background:C.surfaceHi,
+              display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+              <div style={{fontSize:9,fontFamily:"DM Mono",color:C.muted,letterSpacing:1}}>
+                TOTAL OPPORTUNITY
+              </div>
+              {["LARGE","MEDIUM","SMALL"].map(level=>{
+                const dims = [
+                  r.gapAnalysis.customerStrategy,r.gapAnalysis.brandEquity,
+                  r.gapAnalysis.commercial,r.gapAnalysis.digital,
+                  r.gapAnalysis.dataPersonalisation,r.gapAnalysis.serviceRetention,
+                  r.gapAnalysis.communityAdvocacy
+                ].filter(g=>g&&g.gapLabel===level);
+                const col = level==="LARGE"?C.green:level==="MEDIUM"?C.gold:C.muted;
+                return dims.length > 0 ? (
+                  <div key={level} style={{display:"flex",alignItems:"center",gap:5}}>
+                    <span style={{fontFamily:"DM Mono",fontSize:12,fontWeight:700,
+                      color:col}}>{dims.length}</span>
+                    <span style={{fontSize:9,fontFamily:"DM Mono",color:col,
+                      letterSpacing:1}}>{level} GAP{dims.length>1?"S":""}</span>
+                  </div>
+                ) : null;
+              })}
+              <div style={{marginLeft:"auto",fontFamily:"DM Mono",fontSize:10,
+                color:C.accent}}>
+                AVG GAP: {Math.round([
+                  r.gapAnalysis.customerStrategy,r.gapAnalysis.brandEquity,
+                  r.gapAnalysis.commercial,r.gapAnalysis.digital,
+                  r.gapAnalysis.dataPersonalisation,r.gapAnalysis.serviceRetention,
+                  r.gapAnalysis.communityAdvocacy
+                ].filter(g=>g).reduce((a,g)=>a+Math.max(0,g.potential-g.current),0)/
+                [r.gapAnalysis.customerStrategy,r.gapAnalysis.brandEquity,
+                  r.gapAnalysis.commercial,r.gapAnalysis.digital,
+                  r.gapAnalysis.dataPersonalisation,r.gapAnalysis.serviceRetention,
+                  r.gapAnalysis.communityAdvocacy
+                ].filter(g=>g).length||1)} PTS ACROSS 7 DIMENSIONS
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
-
+        </>
+      )}
       {/* CUSTOMER PROFILE */}
       {cp.audienceInsight&&(
         <>
