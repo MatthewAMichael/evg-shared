@@ -1008,28 +1008,56 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
           <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(r.priorityRoadmap.length,3)},1fr)`,
             gap:10,marginBottom:18}}>
             {r.priorityRoadmap.map((phase,i)=>(
-              <div key={i} style={{background:C.surface,border:`1px solid ${C.border}`,
-                borderRadius:7,padding:"12px 14px"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                  <div>
-                    <div style={{fontFamily:"DM Mono",fontSize:8,color:C.muted,
-                      letterSpacing:2,marginBottom:3}}>{phase.horizon}</div>
-                    <div style={{fontWeight:600,fontSize:12,color:C.textHi}}>{phase.phase}</div>
+              <div key={i} style={{background:C.surface,
+                border:`1px solid ${i===0?C.accent+"44":i===1?C.gold+"44":C.purple+"44"}`,
+                borderRadius:7,overflow:"hidden"}}>
+                {/* Phase header band */}
+                <div style={{background:i===0?C.accentDim:i===1?C.goldDim:C.purpleDim,
+                  padding:"10px 14px",borderBottom:`1px solid ${C.border}`}}>
+                  <div style={{display:"flex",alignItems:"center",
+                    justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{width:6,height:6,borderRadius:"50%",flexShrink:0,
+                        background:i===0?C.accent:i===1?C.gold:C.purple}}/>
+                      <span style={{fontFamily:"DM Mono",fontSize:9,letterSpacing:1.5,
+                        color:i===0?C.accent:i===1?C.gold:C.purple,
+                        textTransform:"uppercase"}}>{phase.horizon}</span>
+                    </div>
+                    {phase.expectedValue&&(
+                      <span style={{fontFamily:"DM Mono",fontSize:9,
+                        color:C.green,background:C.greenDim,
+                        padding:"2px 8px",borderRadius:3,
+                        border:`1px solid ${C.green}33`,
+                        whiteSpace:"nowrap",overflow:"hidden",
+                        textOverflow:"ellipsis",maxWidth:200}}>
+                        {phase.expectedValue}
+                      </span>
+                    )}
                   </div>
-                  {phase.expectedValue&&(
-                    <span style={{fontFamily:"DM Mono",fontSize:10,color:C.green,
-                      background:C.greenDim,padding:"2px 8px",borderRadius:3,
-                      border:`1px solid ${C.green}30`,flexShrink:0}}>
-                      {phase.expectedValue}
-                    </span>
-                  )}
+                  <div style={{fontWeight:600,fontSize:13,color:C.textHi,
+                    marginTop:6,lineHeight:1.3}}>
+                    {/* Strip any "(Months X-Y)" text Claude might add to phase name */}
+                    {(phase.phase||"").replace(/\s*\(months?\s*[\d\-]+\)/gi,"").trim()}
+                  </div>
                 </div>
-                {(phase.initiatives||[]).map((init,j)=>(
-                  <div key={j} style={{display:"flex",gap:6,marginBottom:5,alignItems:"flex-start"}}>
-                    <span style={{color:C.accent,fontSize:9,flexShrink:0,marginTop:2}}>◆</span>
-                    <span style={{fontSize:11,color:C.text,lineHeight:1.5}}>{init}</span>
-                  </div>
-                ))}
+                {/* Initiatives */}
+                <div style={{padding:"12px 14px"}}>
+                  {(phase.initiatives||[]).length > 0
+                    ? (phase.initiatives||[]).map((init,j)=>(
+                        <div key={j} style={{display:"flex",gap:8,
+                          marginBottom:j<(phase.initiatives.length-1)?10:0,
+                          alignItems:"flex-start"}}>
+                          <div style={{width:4,height:4,borderRadius:"50%",flexShrink:0,
+                            marginTop:5,
+                            background:i===0?C.accent:i===1?C.gold:C.purple}}/>
+                          <span style={{fontSize:12,color:C.text,lineHeight:1.6}}>{init}</span>
+                        </div>
+                      ))
+                    : <p style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>
+                        No initiatives specified
+                      </p>
+                  }
+                </div>
               </div>
             ))}
           </div>
