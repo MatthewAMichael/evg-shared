@@ -130,10 +130,11 @@ Return ONLY valid JSON. No markdown. No code fences. Start { end }.
 
 INVESTMENT SCORE: Rate 0-100 where 100 = buy immediately with maximum confidence, 0 = avoid entirely.
 - 70-100 = BUY: Strong customer value gap with clear unlock path, motivated management, realistic financials
-- 40-69 = WATCH: Opportunity exists but risk, complexity or uncertainty reduces conviction  
+- 40-69 = WATCH: Opportunity exists but risk, complexity or uncertainty reduces conviction
 - 0-39 = PASS: Gaps too large, turnaround too costly, or market dynamics unfavourable
 Be rigorous — most companies should score 35-65. Reserve 80+ for exceptional opportunities only.
-RULES: All strings 1 sentence max. capabilityGaps 3 items, interventions 2 each. catalysts/risks 3 each. peerBenchmarks 2 items with score int not signal. priorityRoadmap 2 phases 2 initiatives each. CRITICAL: JSON only.`
+GAP ANALYSIS: You MUST populate all 7 gapAnalysis dimensions: customerStrategy, brandEquity, commercial, digital, dataPersonalisation, serviceRetention, communityAdvocacy. For each provide current (0-100, where the company is today), potential (0-100, what is achievable), gapLabel (LARGE if gap>25, MEDIUM if 10-25, SMALL if <10), and gapReason (1 specific sentence).
+RULES: All strings 1 sentence max. capabilityGaps 3 items, interventions 2 each. catalysts/risks 3 each. peerBenchmarks 2 items with score int. priorityRoadmap 2 phases 2 initiatives each. CRITICAL: JSON only.`
 
 // ─── API — proxy call with password, SSE streaming ──────────────────────────
 async function callClaude(system, user, onDone, onError) {
@@ -885,38 +886,6 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
         </>
       )}
 
-      {/* GAP VISUALISER — 7 dimensions */}
-      {r.gapAnalysis&&(
-        <>
-          <Divider title="OPPORTUNITY GAP ANALYSIS"/>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
-          {[
-            ["Customer Strategy",     r.gapAnalysis.customerStrategy,  C.accent],
-            ["Brand Equity",          r.gapAnalysis.brandEquity,       C.purple],
-            ["Commercial Execution",  r.gapAnalysis.commercial,         C.accentB],
-          ].map(([label, g, col])=> g ? (
-            <GapCard key={label} label={label} g={g} col={col}/>
-          ) : null)}
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-          {[
-            ["Digital & Cx",          r.gapAnalysis.digital,            C.gold],
-            ["Data & Personalisation",r.gapAnalysis.dataPersonalisation, C.orange],
-          ].map(([label, g, col])=> g ? (
-            <GapCard key={label} label={label} g={g} col={col}/>
-          ) : null)}
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
-          {[
-            ["Service & Retention",   r.gapAnalysis.serviceRetention,   C.green],
-            ["Community & Advocacy",  r.gapAnalysis.communityAdvocacy,  C.accentB],
-          ].map(([label, g, col])=> g ? (
-            <GapCard key={label} label={label} g={g} col={col}/>
-          ) : null)}
-          </div>
-        </>
-      )}
-
       {/* CAPABILITY GAPS — moved above customer profile */}
       {(r.capabilityGaps||[]).length>0&&(
         <>
@@ -1000,28 +969,163 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
         </>
       )}
 
+      {/* GAP VISUALISER — 7 dimensions */}
+      {r.gapAnalysis&&(
+        <>
+          <Divider title="OPPORTUNITY GAP ANALYSIS"/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+          {[
+            ["Customer Strategy",     r.gapAnalysis.customerStrategy,  C.accent],
+            ["Brand Equity",          r.gapAnalysis.brandEquity,       C.purple],
+            ["Commercial Execution",  r.gapAnalysis.commercial,         C.accentB],
+          ].map(([label, g, col])=> g ? (
+            <GapCard key={label} label={label} g={g} col={col}/>
+          ) : null)}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+          {[
+            ["Digital & Cx",          r.gapAnalysis.digital,            C.gold],
+            ["Data & Personalisation",r.gapAnalysis.dataPersonalisation, C.orange],
+          ].map(([label, g, col])=> g ? (
+            <GapCard key={label} label={label} g={g} col={col}/>
+          ) : null)}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+          {[
+            ["Service & Retention",   r.gapAnalysis.serviceRetention,   C.green],
+            ["Community & Advocacy",  r.gapAnalysis.communityAdvocacy,  C.accentB],
+          ].map(([label, g, col])=> g ? (
+            <GapCard key={label} label={label} g={g} col={col}/>
+          ) : null)}
+          </div>
+        </>
+      )}
+
+      {/* PRIORITY ROADMAP */}
+      {(r.priorityRoadmap||[]).length>0&&(
+        <>
+          <Divider title="TRANSFORMATION ROADMAP"/>
+          <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(r.priorityRoadmap.length,3)},1fr)`,
+            gap:10,marginBottom:18}}>
+            {r.priorityRoadmap.map((phase,i)=>(
+              <div key={i} style={{background:C.surface,border:`1px solid ${C.border}`,
+                borderRadius:7,padding:"12px 14px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                  <div>
+                    <div style={{fontFamily:"DM Mono",fontSize:8,color:C.muted,
+                      letterSpacing:2,marginBottom:3}}>{phase.horizon}</div>
+                    <div style={{fontWeight:600,fontSize:12,color:C.textHi}}>{phase.phase}</div>
+                  </div>
+                  {phase.expectedValue&&(
+                    <span style={{fontFamily:"DM Mono",fontSize:10,color:C.green,
+                      background:C.greenDim,padding:"2px 8px",borderRadius:3,
+                      border:`1px solid ${C.green}30`,flexShrink:0}}>
+                      {phase.expectedValue}
+                    </span>
+                  )}
+                </div>
+                {(phase.initiatives||[]).map((init,j)=>(
+                  <div key={j} style={{display:"flex",gap:6,marginBottom:5,alignItems:"flex-start"}}>
+                    <span style={{color:C.accent,fontSize:9,flexShrink:0,marginTop:2}}>◆</span>
+                    <span style={{fontSize:11,color:C.text,lineHeight:1.5}}>{init}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* CATALYSTS / RISKS */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
+        {[["VALUE CATALYSTS",r.catalysts||[],C.green,"↑"],
+          ["KEY RISKS",r.risks||[],C.red,"↓"]].map(([title,items,col,arrow])=>(
+          <div key={title}>
+            <Divider title={title}/>
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,
+              borderRadius:6,padding:"11px 14px"}}>
+              {items.map((item,i)=>(
+                <div key={i} style={{display:"flex",gap:7,marginBottom:7,
+                  fontSize:12,color:C.text,lineHeight:1.6}}>
+                  <span style={{color:col,flexShrink:0}}>{arrow}</span>{item}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* CUSTOMER PROFILE */}
       {cp.audienceInsight&&(
         <>
           <Divider title="CUSTOMER PROFILE & AUDIENCE INTELLIGENCE"/>
-          <div style={{background:C.surface,border:`1px solid ${C.border}`,
-            borderRadius:8,padding:"14px 18px",marginBottom:18}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:12}}>
-              {[
-                ["Customer Base",cp.estimatedCustomerBase,C.accentB],
-                ["NPS Estimate",cp.npsEstimate,sc(parseInt(cp.npsEstimate)||50)],
-                ["Satisfaction",cp.satisfactionLevel,cp.satisfactionLevel==="HIGH"?C.green:cp.satisfactionLevel==="MEDIUM"?C.gold:C.red],
-                ["Loyalty",cp.loyaltyStrength,cp.loyaltyStrength==="STRONG"?C.green:cp.loyaltyStrength==="MODERATE"?C.gold:C.red],
-                ["Community",cp.communityEngagement,cp.communityEngagement==="HIGH"?C.green:cp.communityEngagement==="MEDIUM"?C.gold:C.red],
-              ].map(([label,val,col])=>(
-                <div key={label} style={{textAlign:"center",padding:"8px 4px"}}>
-                  <div style={{fontFamily:"DM Mono",fontSize:13,fontWeight:600,color:col,marginBottom:3}}>{val||"—"}</div>
-                  <div style={{fontSize:9,color:C.muted,letterSpacing:0.8}}>{label}</div>
-                </div>
-              ))}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+            {/* Left — key metrics as signal cards */}
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {/* Top row: 3 signal indicators */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+                {[
+                  ["Satisfaction", cp.satisfactionLevel,
+                    cp.satisfactionLevel==="HIGH"?C.green:cp.satisfactionLevel==="MEDIUM"?C.gold:C.red,
+                    cp.satisfactionLevel==="HIGH"?"▲":cp.satisfactionLevel==="MEDIUM"?"◆":"▼"],
+                  ["Loyalty", cp.loyaltyStrength,
+                    cp.loyaltyStrength==="STRONG"?C.green:cp.loyaltyStrength==="MODERATE"?C.gold:C.red,
+                    cp.loyaltyStrength==="STRONG"?"▲":cp.loyaltyStrength==="MODERATE"?"◆":"▼"],
+                  ["Community", cp.communityEngagement,
+                    cp.communityEngagement==="HIGH"?C.green:cp.communityEngagement==="MEDIUM"?C.gold:C.red,
+                    cp.communityEngagement==="HIGH"?"▲":cp.communityEngagement==="MEDIUM"?"◆":"▼"],
+                ].map(([label,val,col,icon])=>(
+                  <div key={label} style={{background:C.surface,border:`1px solid ${col}33`,
+                    borderRadius:7,padding:"12px 10px",textAlign:"center"}}>
+                    <div style={{fontSize:18,color:col,marginBottom:4}}>{icon}</div>
+                    <div style={{fontFamily:"DM Mono",fontSize:11,fontWeight:700,
+                      color:col,marginBottom:4}}>{val||"—"}</div>
+                    <div style={{fontSize:9,color:C.muted,letterSpacing:1,
+                      textTransform:"uppercase"}}>{label}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Bottom row: customer base + NPS */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                {[
+                  ["Est. Customer Base", cp.estimatedCustomerBase, C.accentB],
+                  ["NPS Estimate",       cp.npsEstimate,           sc(parseInt(cp.npsEstimate)||50)],
+                ].map(([label,val,col])=>(
+                  <div key={label} style={{background:C.surface,border:`1px solid ${C.border}`,
+                    borderRadius:7,padding:"12px 14px"}}>
+                    <div style={{fontFamily:"DM Mono",fontSize:9,color:C.muted,
+                      letterSpacing:1.5,marginBottom:8,textTransform:"uppercase"}}>{label}</div>
+                    <div style={{fontFamily:"DM Mono",fontSize:16,fontWeight:700,
+                      color:col,letterSpacing:-0.3}}>{val||"—"}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p style={{fontSize:12,color:C.text,lineHeight:1.7,
-              borderTop:`1px solid ${C.border}`,paddingTop:10}}>{cp.audienceInsight}</p>
+            {/* Right — audience insight */}
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,
+              borderRadius:7,padding:"18px 20px",display:"flex",flexDirection:"column",
+              justifyContent:"space-between"}}>
+              <div>
+                <div style={{fontFamily:"DM Mono",fontSize:9,color:C.muted,
+                  letterSpacing:2,marginBottom:12,textTransform:"uppercase"}}>
+                  AUDIENCE INSIGHT
+                </div>
+                <p style={{fontSize:13,color:C.textHi,lineHeight:1.8,
+                  marginBottom:16}}>{cp.audienceInsight}</p>
+              </div>
+              {/* Investment implication of customer profile */}
+              <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12}}>
+                <div style={{fontFamily:"DM Mono",fontSize:9,color:C.accent,
+                  letterSpacing:1.5,marginBottom:6}}>INVESTMENT IMPLICATION</div>
+                <p style={{fontSize:11,color:C.text,lineHeight:1.65}}>
+                  {cp.loyaltyStrength==="STRONG"
+                    ? "Strong loyalty base provides a solid foundation for value uplift initiatives — lower acquisition cost and higher LTV potential."
+                    : cp.loyaltyStrength==="MODERATE"
+                    ? "Moderate loyalty signals meaningful churn risk and untapped retention value — a priority intervention area."
+                    : "Weak loyalty indicates significant customer strategy gaps — retention and experience investment has high return potential."}
+                </p>
+              </div>
+            </div>
           </div>
         </>
       )}
@@ -1121,60 +1225,6 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
       </div>
 
 
-
-      {/* PRIORITY ROADMAP */}
-      {(r.priorityRoadmap||[]).length>0&&(
-        <>
-          <Divider title="TRANSFORMATION ROADMAP"/>
-          <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(r.priorityRoadmap.length,3)},1fr)`,
-            gap:10,marginBottom:18}}>
-            {r.priorityRoadmap.map((phase,i)=>(
-              <div key={i} style={{background:C.surface,border:`1px solid ${C.border}`,
-                borderRadius:7,padding:"12px 14px"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                  <div>
-                    <div style={{fontFamily:"DM Mono",fontSize:8,color:C.muted,
-                      letterSpacing:2,marginBottom:3}}>{phase.horizon}</div>
-                    <div style={{fontWeight:600,fontSize:12,color:C.textHi}}>{phase.phase}</div>
-                  </div>
-                  {phase.expectedValue&&(
-                    <span style={{fontFamily:"DM Mono",fontSize:10,color:C.green,
-                      background:C.greenDim,padding:"2px 8px",borderRadius:3,
-                      border:`1px solid ${C.green}30`,flexShrink:0}}>
-                      {phase.expectedValue}
-                    </span>
-                  )}
-                </div>
-                {(phase.initiatives||[]).map((init,j)=>(
-                  <div key={j} style={{display:"flex",gap:6,marginBottom:5,alignItems:"flex-start"}}>
-                    <span style={{color:C.accent,fontSize:9,flexShrink:0,marginTop:2}}>◆</span>
-                    <span style={{fontSize:11,color:C.text,lineHeight:1.5}}>{init}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* CATALYSTS / RISKS */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
-        {[["VALUE CATALYSTS",r.catalysts||[],C.green,"↑"],
-          ["KEY RISKS",r.risks||[],C.red,"↓"]].map(([title,items,col,arrow])=>(
-          <div key={title}>
-            <Divider title={title}/>
-            <div style={{background:C.surface,border:`1px solid ${C.border}`,
-              borderRadius:6,padding:"11px 14px"}}>
-              {items.map((item,i)=>(
-                <div key={i} style={{display:"flex",gap:7,marginBottom:7,
-                  fontSize:12,color:C.text,lineHeight:1.6}}>
-                  <span style={{color:col,flexShrink:0}}>{arrow}</span>{item}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
 
       <p style={{fontSize:8,color:C.muted,fontFamily:"DM Mono",letterSpacing:1,marginTop:8}}>
         ANALYSED {fmt(r.analysedAt)} · WEIGHTED SCORE {ws} · RAW SCORE {r.overallScore} · {sig}
