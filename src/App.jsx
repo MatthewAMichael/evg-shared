@@ -18,9 +18,42 @@ const C = {
 };
 
 // investment signal: green=buy, gold=watch, red=pass
+// Investment score: 0-100. 70-100=BUY(green), 40-69=WATCH(gold), 0-39=PASS(red)
+// Smooth colour interpolation across the full range
+function scoreToColor(n) {
+  const s = Math.max(0, Math.min(100, n || 0));
+  if (s >= 70) {
+    // green zone: interpolate from gold-green at 70 to pure green at 100
+    const t = (s - 70) / 30;
+    const r = Math.round(245 * (1-t) + 0 * t);
+    const g = Math.round(200 * (1-t) + 227 * t);
+    const b = Math.round(66 * (1-t) + 150 * t);
+    return `rgb(${r},${g},${b})`;
+  } else if (s >= 40) {
+    // watch zone: interpolate from red-orange at 40 to gold at 69
+    const t = (s - 40) / 29;
+    const r = Math.round(255 * (1-t) + 245 * t);
+    const g = Math.round(69 * (1-t) + 200 * t);
+    const b = Math.round(96 * (1-t) + 66 * t);
+    return `rgb(${r},${g},${b})`;
+  } else {
+    // pass zone: interpolate from dark-red at 0 to red at 39
+    const t = s / 39;
+    const r = Math.round(180 * (1-t) + 255 * t);
+    const g = Math.round(20 * (1-t) + 69 * t);
+    const b = Math.round(20 * (1-t) + 96 * t);
+    return `rgb(${r},${g},${b})`;
+  }
+}
+function scoreToBand(n) {
+  const s = Math.max(0, Math.min(100, n || 0));
+  if (s >= 70) return "BUY";
+  if (s >= 40) return "WATCH";
+  return "PASS";
+}
 const inv = r => r==="BUY" ? C.green : r==="WATCH" ? C.gold : C.red;
 // dimension score colour (low score = under-realised = opportunity)
-const sc = s => s >= 70 ? C.green : s >= 45 ? C.gold : C.red;
+const sc = s => s >= 70 ? C.green : s >= 40 ? C.gold : C.red;
 const clamp = (v,a,b) => Math.min(b,Math.max(a,v));
 const fmt = d => new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"});
 
@@ -91,9 +124,14 @@ Draw on Twitter/X, Reddit, Instagram, Facebook, Trustpilot, App Store for sentim
 
 Return ONLY valid JSON. No markdown. No code fences. Start { end }.
 
-{"company":string,"ticker":string,"sector":string,"marketCap":string,"enterpriseValue":string,"investmentSignal":"BUY"|"WATCH"|"PASS","confidenceLevel":"HIGH"|"MEDIUM"|"LOW","overallScore":int,"executiveSummary":string,"customerStrategyScore":int,"brandEquityScore":int,"commercialScore":int,"dimensions":{"sentiment":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"social":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"reviews":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"brand":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"financial":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"analyst":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string}},"customerProfile":{"estimatedCustomerBase":string,"npsEstimate":string,"satisfactionLevel":"HIGH"|"MEDIUM"|"LOW","loyaltyStrength":"STRONG"|"MODERATE"|"WEAK","communityEngagement":"HIGH"|"MEDIUM"|"LOW","audienceInsight":string},"capabilityGaps":[{"domain":string,"severity":"CRITICAL"|"SIGNIFICANT"|"MODERATE","currentState":string,"potentialState":string,"interventions":[string],"revenueUplift":string,"costReduction":string,"investmentRequired":string,"timeHorizon":"0-12 months"|"1-2 years"|"2-4 years","kpiTargets":string,"benchmarkReference":string}],"valueBridgeModel":{"currentEVEstimate":string,"potentialEVEstimate":string,"totalUpliftEstimate":string,"revenueGrowthComponent":string,"costEfficiencyComponent":string,"brandMultipleExpansion":string,"totalInvestmentRequired":string,"paybackPeriod":string,"directionalIRR":string,"acquisitionPriceGuidance":string,"valuationRationale":string},"catalysts":[string],"risks":[string],"investmentThesis":string,"peerBenchmarks":[{"company":string,"score":int,"signal":"BUY"|"WATCH"|"PASS","note":string}],"priorityRoadmap":[{"phase":string,"horizon":string,"initiatives":[string],"expectedValue":string}]}
+{"company":string,"ticker":string,"sector":string,"marketCap":string,"enterpriseValue":string,"investmentSignal":"BUY"|"WATCH"|"PASS","confidenceLevel":"HIGH"|"MEDIUM"|"LOW","overallScore":int,"executiveSummary":string,"customerStrategyScore":int,"brandEquityScore":int,"commercialScore":int,"dimensions":{"sentiment":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"social":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"reviews":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"brand":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"financial":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"analyst":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string}},"customerProfile":{"estimatedCustomerBase":string,"npsEstimate":string,"satisfactionLevel":"HIGH"|"MEDIUM"|"LOW","loyaltyStrength":"STRONG"|"MODERATE"|"WEAK","communityEngagement":"HIGH"|"MEDIUM"|"LOW","audienceInsight":string},"capabilityGaps":[{"domain":string,"severity":"CRITICAL"|"SIGNIFICANT"|"MODERATE","currentState":string,"potentialState":string,"interventions":[string],"revenueUplift":string,"costReduction":string,"investmentRequired":string,"timeHorizon":"0-12 months"|"1-2 years"|"2-4 years","kpiTargets":string,"benchmarkReference":string}],"valueBridgeModel":{"currentEVEstimate":string,"potentialEVEstimate":string,"totalUpliftEstimate":string,"revenueGrowthComponent":string,"costEfficiencyComponent":string,"brandMultipleExpansion":string,"totalInvestmentRequired":string,"paybackPeriod":string,"directionalIRR":string,"acquisitionPriceGuidance":string,"valuationRationale":string},"catalysts":[string],"risks":[string],"investmentThesis":string,"peerBenchmarks":[{"company":string,"score":int,"score":int,"note":string}],"priorityRoadmap":[{"phase":string,"horizon":string,"initiatives":[string],"expectedValue":string}]}
 
-RULES: All strings 1 sentence max. capabilityGaps 3 items, interventions 2 each. catalysts/risks 3 each. peerBenchmarks 2. priorityRoadmap 2 phases 2 initiatives each. Low score = big gap = high opportunity. CRITICAL: JSON only.`
+INVESTMENT SCORE: Rate 0-100 where 100 = buy immediately with maximum confidence, 0 = avoid entirely.
+- 70-100 = BUY: Strong customer value gap with clear unlock path, motivated management, realistic financials
+- 40-69 = WATCH: Opportunity exists but risk, complexity or uncertainty reduces conviction  
+- 0-39 = PASS: Gaps too large, turnaround too costly, or market dynamics unfavourable
+Be rigorous — most companies should score 35-65. Reserve 80+ for exceptional opportunities only.
+RULES: All strings 1 sentence max. capabilityGaps 3 items, interventions 2 each. catalysts/risks 3 each. peerBenchmarks 2 items with score int not signal. priorityRoadmap 2 phases 2 initiatives each. CRITICAL: JSON only.`
 
 // ─── API — proxy call with password, SSE streaming ──────────────────────────
 async function callClaude(system, user, onDone, onError) {
@@ -177,27 +215,37 @@ const Meter = ({value,color,height=4,max=100}) => (
 );
 
 const ScoreBadge = ({score,size=52,signal=null}) => {
-  const col = signal ? inv(signal) : sc(score);
+  // Always use the numeric score for colour; signal only for label fallback
+  const numScore = typeof score === "number" ? score : 50;
+  const col = scoreToColor(numScore);
+  const label = signal || scoreToBand(numScore);
   return (
     <div style={{width:size,height:size,borderRadius:"50%",display:"flex",
-      alignItems:"center",justifyContent:"center",flexShrink:0,
-      border:`2px solid ${col}`,background:col+"11",
-      color:col,fontWeight:700,fontSize:size*0.32,fontFamily:"monospace"}}>
-      {signal||score}
+      flexDirection:"column",alignItems:"center",justifyContent:"center",
+      flexShrink:0,border:`2px solid ${col}`,background:col+"18",gap:0}}>
+      <span style={{color:col,fontWeight:700,fontSize:size*0.30,
+        fontFamily:"monospace",lineHeight:1.1}}>{numScore}</span>
+      {size >= 44 && (
+        <span style={{color:col,fontWeight:600,fontSize:size*0.13,
+          fontFamily:"DM Mono",letterSpacing:0.5,lineHeight:1.2,
+          opacity:0.85}}>{label}</span>
+      )}
     </div>
   );
 };
 
-const SignalBadge = ({signal,large=false}) => {
-  const col=inv(signal);
+const SignalBadge = ({signal,score,large=false}) => {
+  // Use numeric score for colour if available, else fall back to signal string
+  const col = (typeof score === "number") ? scoreToColor(score) : inv(signal||"WATCH");
+  const band = (typeof score === "number") ? scoreToBand(score) : (signal||"WATCH");
   const icons={"BUY":"▲","WATCH":"◆","PASS":"▼"};
   return (
     <div style={{display:"flex",alignItems:"center",gap:6,
       background:col+"15",border:`1px solid ${col}33`,
       borderRadius:4,padding:large?"8px 16px":"4px 10px"}}>
-      <span style={{color:col,fontSize:large?16:11}}>{icons[signal]}</span>
+      <span style={{color:col,fontSize:large?16:11}}>{icons[band]||"◆"}</span>
       <span style={{fontFamily:"DM Mono",fontSize:large?14:10,fontWeight:600,
-        color:col,letterSpacing:1.5}}>{signal}</span>
+        color:col,letterSpacing:1.5}}>{band}</span>
     </div>
   );
 };
@@ -357,6 +405,14 @@ export default function App() {
         setLoading(false);
         try{
           const parsed=JSON.parse(text.replace(/```json|```/g,"").trim());
+          // Map investmentScore (0-100) to investmentSignal for backwards compat
+          if (parsed.investmentScore !== undefined && !parsed.investmentSignal) {
+            parsed.investmentSignal = scoreToBand(parsed.investmentScore);
+          }
+          // Use investmentScore as the primary score if present
+          if (parsed.investmentScore !== undefined) {
+            parsed.overallScore = parsed.investmentScore;
+          }
           const id=Date.now().toString();
           const ws=weightedScore(parsed.dimensions);
           const entry={...parsed,id,analysedAt:Date.now(),weightedScore:ws,scoreHistory:[ws]};
@@ -514,13 +570,13 @@ export default function App() {
                   </div>
                   <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
                     {watchlist.includes(a.id)&&<span style={{color:C.gold,fontSize:11}}>★</span>}
-                    <Spark values={a.scoreHistory} color={inv(a.investmentSignal||"WATCH")}
+                    <Spark values={a.scoreHistory} color={scoreToColor(a.overallScore||a.weightedScore||50)}
                       width={36} height={15}/>
                   </div>
                 </div>
                 <div style={{display:"flex",gap:5,alignItems:"center"}}>
                   <Tag label={a.investmentSignal||"—"}
-                    color={inv(a.investmentSignal||"WATCH")}/>
+                    color={scoreToColor(a.overallScore||a.weightedScore||50)}/>
                   {a.valueBridgeModel?.totalUpliftEstimate&&(
                     <Tag label={a.valueBridgeModel.totalUpliftEstimate} color={C.green}/>
                   )}
@@ -720,7 +776,7 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
               <span style={{fontSize:10,fontFamily:"DM Mono",color:C.muted,letterSpacing:1}}>{label.toUpperCase()}</span>
               <span style={{fontFamily:"DM Mono",fontSize:16,fontWeight:700,color:sc(score)}}>{score}</span>
             </div>
-            <Meter value={score} color={sc(score)}/>
+            <Meter value={score} color={scoreToColor(score)}/>
             <p style={{marginTop:6,fontSize:10,color:C.muted,lineHeight:1.5}}>{desc}</p>
           </div>
         ))}
@@ -1128,7 +1184,7 @@ function WatchlistView({analyses,watchlist,setWatchlist,alerts,setAlerts,setActi
               </button>
             </div>
             <Meter value={a.weightedScore||a.overallScore}
-              color={inv(a.investmentSignal||"WATCH")} height={3}/>
+              color={scoreToColor(a.overallScore||a.weightedScore||50)} height={3}/>
             <div style={{display:"flex",justifyContent:"space-between",
               alignItems:"center",marginTop:9}}>
               <SignalBadge signal={a.investmentSignal||"WATCH"}/>
@@ -1136,7 +1192,7 @@ function WatchlistView({analyses,watchlist,setWatchlist,alerts,setAlerts,setActi
                 <Tag label={a.valueBridgeModel.totalUpliftEstimate} color={C.green}/>
               )}
               <Spark values={a.scoreHistory}
-                color={inv(a.investmentSignal||"WATCH")} width={55} height={18}/>
+                color={scoreToColor(a.overallScore||a.weightedScore||50)} width={55} height={18}/>
             </div>
           </div>
         ))}
@@ -1163,7 +1219,7 @@ function CompareView({analyses,compareIds,setCompareIds,weights}) {
       <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:22}}>
         {analyses.map(a=>(
           <Pill key={a.id} label={a.company} active={compareIds.includes(a.id)}
-            color={inv(a.investmentSignal||"WATCH")}
+            color={scoreToColor(a.overallScore||a.weightedScore||50)}
             onClick={()=>setCompareIds(c=>c.includes(a.id)?
               c.filter(x=>x!==a.id):[...c.slice(-2),a.id])}/>
         ))}
