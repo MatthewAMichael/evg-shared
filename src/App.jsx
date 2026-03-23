@@ -1101,6 +1101,83 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
           </div>
         </>
       )}
+
+      {/* TRANSFORMATION ROADMAP */}
+      {(r.priorityRoadmap||[]).length>0&&(
+        <>
+          <Divider title="TRANSFORMATION ROADMAP"/>
+          <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(r.priorityRoadmap.length,3)},1fr)`,
+            gap:10,marginBottom:18}}>
+            {r.priorityRoadmap.map((phase,i)=>(
+              <div key={i} style={{background:C.surface,
+                border:`1px solid ${i===0?C.accent+"44":i===1?C.gold+"44":C.purple+"44"}`,
+                borderRadius:7,overflow:"hidden"}}>
+                <div style={{background:i===0?C.accentDim:i===1?C.goldDim:C.purpleDim,
+                  padding:"10px 14px",borderBottom:`1px solid ${C.border}`}}>
+                  <div style={{display:"flex",alignItems:"center",
+                    justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{width:6,height:6,borderRadius:"50%",flexShrink:0,
+                        background:i===0?C.accent:i===1?C.gold:C.purple}}/>
+                      <span style={{fontFamily:"DM Mono",fontSize:9,letterSpacing:1.5,
+                        color:i===0?C.accent:i===1?C.gold:C.purple,
+                        textTransform:"uppercase"}}>{phase.horizon}</span>
+                    </div>
+                    {phase.expectedValue&&(
+                      <span style={{fontFamily:"DM Mono",fontSize:9,
+                        color:C.green,background:C.greenDim,
+                        padding:"2px 8px",borderRadius:3,
+                        border:`1px solid ${C.green}33`,
+                        whiteSpace:"nowrap",overflow:"hidden",
+                        textOverflow:"ellipsis",maxWidth:200}}>
+                        {phase.expectedValue}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{fontWeight:600,fontSize:13,color:C.textHi,
+                    marginTop:6,lineHeight:1.3}}>
+                    {(phase.phase||"").replace(/\s*\(months?\s*[\d\-]+\)/gi,"").trim()}
+                  </div>
+                </div>
+                <div style={{padding:"12px 14px"}}>
+                  {(phase.initiatives||[]).length>0
+                    ? (phase.initiatives||[]).map((init,j)=>(
+                        <div key={j} style={{display:"flex",gap:8,
+                          marginBottom:j<(phase.initiatives.length-1)?10:0,
+                          alignItems:"flex-start"}}>
+                          <div style={{width:4,height:4,borderRadius:"50%",flexShrink:0,
+                            marginTop:5,
+                            background:i===0?C.accent:i===1?C.gold:C.purple}}/>
+                          <span style={{fontSize:12,color:C.text,lineHeight:1.6}}>{init}</span>
+                        </div>
+                      ))
+                    : <p style={{fontSize:11,color:C.muted,fontStyle:"italic"}}>No initiatives specified</p>
+                  }
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* VALUE CATALYSTS & KEY RISKS */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18}}>
+        {[["VALUE CATALYSTS",r.catalysts||[],C.green,"↑"],
+          ["KEY RISKS",r.risks||[],C.red,"↓"]].map(([title,items,col,arrow])=>(
+          <div key={title}>
+            <Divider title={title}/>
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,
+              borderRadius:6,padding:"11px 14px"}}>
+              {items.map((item,i)=>(
+                <div key={i} style={{display:"flex",gap:7,marginBottom:7,
+                  fontSize:12,color:C.text,lineHeight:1.6}}>
+                  <span style={{color:col,flexShrink:0}}>{arrow}</span>{item}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
       {/* CUSTOMER PROFILE */}
       {cp.audienceInsight&&(
         <>
