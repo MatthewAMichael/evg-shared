@@ -126,7 +126,7 @@ Draw on Twitter/X, Reddit, Instagram, Facebook, Trustpilot, App Store for sentim
 
 Return ONLY valid JSON. No markdown. No code fences. Start { end }.
 
-{"company":string,"ticker":string,"sector":string,"marketCap":string,"enterpriseValue":string,"investmentScore": integer 0-100 (100=buy immediately, 0=avoid entirely),"confidenceLevel":"HIGH"|"MEDIUM"|"LOW","overallScore":int,"executiveSummary":string,"gapAnalysis":{"customerStrategy":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string},"brandEquity":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string},"commercial":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string}},"dimensions":{"sentiment":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"social":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"reviews":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"brand":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"financial":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"analyst":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string}},"customerProfile":{"estimatedCustomerBase":string,"npsEstimate":string,"satisfactionLevel":"HIGH"|"MEDIUM"|"LOW","loyaltyStrength":"STRONG"|"MODERATE"|"WEAK","communityEngagement":"HIGH"|"MEDIUM"|"LOW","audienceInsight":string},"capabilityGaps":[{"domain":string,"severity":"CRITICAL"|"SIGNIFICANT"|"MODERATE","currentState":string,"potentialState":string,"interventions":[string],"revenueUplift":string,"costReduction":string,"investmentRequired":string,"timeHorizon":"0-12 months"|"1-2 years"|"2-4 years","kpiTargets":string,"benchmarkReference":string}],"valueBridgeModel":{"currentEVEstimate":string,"potentialEVEstimate":string,"totalUpliftEstimate":string,"revenueGrowthComponent":string,"costEfficiencyComponent":string,"brandMultipleExpansion":string,"totalInvestmentRequired":string,"paybackPeriod":string,"directionalIRR":string,"acquisitionPriceGuidance":string,"valuationRationale":string},"catalysts":[string],"risks":[string],"investmentThesis":string,"peerBenchmarks":[{"company":string,"score":int,"score":int,"note":string}],"priorityRoadmap":[{"phase":string,"horizon":string,"initiatives":[string],"expectedValue":string}]}
+{"company":string,"ticker":string,"sector":string,"marketCap":string,"enterpriseValue":string,"investmentScore": integer 0-100 (100=buy immediately, 0=avoid entirely),"confidenceLevel":"HIGH"|"MEDIUM"|"LOW","overallScore":int,"executiveSummary":string,"gapAnalysis":{"customerStrategy":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string},"brandEquity":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string},"commercial":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string},"digital":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string},"dataPersonalisation":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string},"serviceRetention":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string},"communityAdvocacy":{"current":int,"potential":int,"gapLabel":"LARGE"|"MEDIUM"|"SMALL","gapReason":string}},"dimensions":{"sentiment":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"social":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"reviews":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"brand":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"financial":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string},"analyst":{"score":int,"insight":string,"signal":string,"trend":"UP"|"DOWN"|"FLAT","source":string}},"customerProfile":{"estimatedCustomerBase":string,"npsEstimate":string,"satisfactionLevel":"HIGH"|"MEDIUM"|"LOW","loyaltyStrength":"STRONG"|"MODERATE"|"WEAK","communityEngagement":"HIGH"|"MEDIUM"|"LOW","audienceInsight":string},"capabilityGaps":[{"domain":string,"severity":"CRITICAL"|"SIGNIFICANT"|"MODERATE","currentState":string,"potentialState":string,"interventions":[string],"revenueUplift":string,"costReduction":string,"investmentRequired":string,"timeHorizon":"0-12 months"|"1-2 years"|"2-4 years","kpiTargets":string,"benchmarkReference":string}],"valueBridgeModel":{"currentEVEstimate":string,"potentialEVEstimate":string,"totalUpliftEstimate":string,"revenueGrowthComponent":string,"costEfficiencyComponent":string,"brandMultipleExpansion":string,"totalInvestmentRequired":string,"paybackPeriod":string,"directionalIRR":string,"acquisitionPriceGuidance":string,"valuationRationale":string},"catalysts":[string],"risks":[string],"investmentThesis":string,"peerBenchmarks":[{"company":string,"score":int,"score":int,"note":string}],"priorityRoadmap":[{"phase":string,"horizon":string,"initiatives":[string],"expectedValue":string}]}
 
 INVESTMENT SCORE: Rate 0-100 where 100 = buy immediately with maximum confidence, 0 = avoid entirely.
 - 70-100 = BUY: Strong customer value gap with clear unlock path, motivated management, realistic financials
@@ -708,6 +708,56 @@ export default function App() {
   );
 }
 
+
+// ── GapCard — reusable gap visualiser card ─────────────────────────────────
+function GapCard({label, g, col}) {
+  const gapCol = g.gapLabel==="LARGE" ? C.green : g.gapLabel==="MEDIUM" ? C.gold : C.muted;
+  return (
+    <div style={{background:C.surface,border:`1px solid ${C.border}`,
+      borderRadius:7,padding:"14px 16px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",
+        alignItems:"center",marginBottom:12}}>
+        <span style={{fontSize:9,fontFamily:"DM Mono",color:C.muted,
+          letterSpacing:1.5}}>{label.toUpperCase()}</span>
+        <span style={{fontSize:9,fontFamily:"DM Mono",fontWeight:700,
+          padding:"2px 8px",borderRadius:3,letterSpacing:1,
+          background:gapCol+"20",color:gapCol,
+          border:`1px solid ${gapCol}44`}}>{g.gapLabel} GAP</span>
+      </div>
+      <div style={{marginBottom:5}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+          <span style={{fontSize:8,fontFamily:"DM Mono",color:col,letterSpacing:1}}>POTENTIAL</span>
+          <span style={{fontSize:9,fontFamily:"DM Mono",color:col,fontWeight:600}}>{g.potential}</span>
+        </div>
+        <div style={{background:C.border,borderRadius:2,height:6,overflow:"hidden"}}>
+          <div style={{width:`${g.potential}%`,height:"100%",borderRadius:2,
+            background:`linear-gradient(90deg,${col}44,${col})`}}/>
+        </div>
+      </div>
+      <div style={{marginBottom:10}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+          <span style={{fontSize:8,fontFamily:"DM Mono",color:C.muted,letterSpacing:1}}>CURRENT</span>
+          <span style={{fontSize:9,fontFamily:"DM Mono",color:C.muted,fontWeight:600}}>{g.current}</span>
+        </div>
+        <div style={{background:C.border,borderRadius:2,height:6,overflow:"hidden"}}>
+          <div style={{width:`${g.current}%`,height:"100%",borderRadius:2,
+            background:`linear-gradient(90deg,${C.muted}44,${C.muted})`}}/>
+        </div>
+      </div>
+      <div style={{background:gapCol+"0D",border:`1px solid ${gapCol}22`,
+        borderRadius:4,padding:"6px 8px",marginBottom:8}}>
+        <div style={{fontSize:8,fontFamily:"DM Mono",color:gapCol,
+          letterSpacing:1,marginBottom:2}}>
+          +{Math.max(0, g.potential - g.current)} PTS OPPORTUNITY
+        </div>
+        <div style={{width:`${Math.max(0,(g.potential-g.current))}%`,
+          height:3,borderRadius:2,background:gapCol,opacity:0.7}}/>
+      </div>
+      <p style={{fontSize:11,color:C.text,lineHeight:1.55}}>{g.gapReason}</p>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ANALYSIS VIEW
 // ═══════════════════════════════════════════════════════════════════════════
@@ -765,71 +815,6 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
             <SignalBadge signal={sig}/>
             <p style={{fontSize:13,lineHeight:1.85,color:C.textHi,flex:1}}>{r.investmentThesis}</p>
           </div>
-        </div>
-      )}
-
-      {/* GAP VISUALISER */}
-      {r.gapAnalysis&&(
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:18}}>
-          {[
-            ["Customer Strategy", r.gapAnalysis.customerStrategy, C.accent],
-            ["Brand Equity",      r.gapAnalysis.brandEquity,      C.purple],
-            ["Commercial",        r.gapAnalysis.commercial,        C.accentB],
-          ].map(([label, g, col])=> g ? (
-            <div key={label} style={{background:C.surface,border:`1px solid ${C.border}`,
-              borderRadius:7,padding:"14px 16px"}}>
-              {/* header */}
-              <div style={{display:"flex",justifyContent:"space-between",
-                alignItems:"center",marginBottom:12}}>
-                <span style={{fontSize:9,fontFamily:"DM Mono",color:C.muted,
-                  letterSpacing:1.5}}>{label.toUpperCase()}</span>
-                <span style={{fontSize:9,fontFamily:"DM Mono",fontWeight:700,
-                  padding:"2px 8px",borderRadius:3,letterSpacing:1,
-                  background: g.gapLabel==="LARGE"?C.green+"20":g.gapLabel==="MEDIUM"?C.gold+"20":C.muted+"20",
-                  color: g.gapLabel==="LARGE"?C.green:g.gapLabel==="MEDIUM"?C.gold:C.muted,
-                  border:`1px solid ${g.gapLabel==="LARGE"?C.green+"44":g.gapLabel==="MEDIUM"?C.gold+"44":C.muted+"44"}`
-                }}>{g.gapLabel} GAP</span>
-              </div>
-              {/* potential bar */}
-              <div style={{marginBottom:5}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                  <span style={{fontSize:8,fontFamily:"DM Mono",color:col,letterSpacing:1}}>POTENTIAL</span>
-                  <span style={{fontSize:9,fontFamily:"DM Mono",color:col,fontWeight:600}}>{g.potential}</span>
-                </div>
-                <div style={{background:C.border,borderRadius:2,height:6,overflow:"hidden"}}>
-                  <div style={{width:`${g.potential}%`,height:"100%",borderRadius:2,
-                    background:`linear-gradient(90deg,${col}44,${col})`}}/>
-                </div>
-              </div>
-              {/* current bar */}
-              <div style={{marginBottom:10}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                  <span style={{fontSize:8,fontFamily:"DM Mono",color:C.muted,letterSpacing:1}}>CURRENT</span>
-                  <span style={{fontSize:9,fontFamily:"DM Mono",color:C.muted,fontWeight:600}}>{g.current}</span>
-                </div>
-                <div style={{background:C.border,borderRadius:2,height:6,overflow:"hidden"}}>
-                  <div style={{width:`${g.current}%`,height:"100%",borderRadius:2,
-                    background:`linear-gradient(90deg,${C.muted}44,${C.muted})`}}/>
-                </div>
-              </div>
-              {/* gap indicator */}
-              <div style={{background: g.gapLabel==="LARGE"?C.green+"0D":g.gapLabel==="MEDIUM"?C.gold+"0D":C.border,
-                border:`1px solid ${g.gapLabel==="LARGE"?C.green+"22":g.gapLabel==="MEDIUM"?C.gold+"22":C.border}`,
-                borderRadius:4,padding:"6px 8px",marginBottom:8}}>
-                <div style={{fontSize:8,fontFamily:"DM Mono",
-                  color:g.gapLabel==="LARGE"?C.green:g.gapLabel==="MEDIUM"?C.gold:C.muted,
-                  letterSpacing:1,marginBottom:2}}>
-                  +{g.potential - g.current} PTS OPPORTUNITY
-                </div>
-                <div style={{width:`${Math.max(0,(g.potential-g.current))}%`,
-                  height:3,borderRadius:2,
-                  background:g.gapLabel==="LARGE"?C.green:g.gapLabel==="MEDIUM"?C.gold:C.muted,
-                  opacity:0.7}}/>
-              </div>
-              {/* reason */}
-              <p style={{fontSize:11,color:C.text,lineHeight:1.55}}>{g.gapReason}</p>
-            </div>
-          ) : null)}
         </div>
       )}
 
@@ -897,6 +882,38 @@ function AnalysisView({r,weights,weightedScore,watchlist,setWatchlist,compareIds
               <p style={{fontSize:12,color:C.text,lineHeight:1.75}}>{vb.valuationRationale}</p>
             </div>
           )}
+        </>
+      )}
+
+      {/* GAP VISUALISER — 7 dimensions */}
+      {r.gapAnalysis&&(
+        <>
+          <Divider title="OPPORTUNITY GAP ANALYSIS"/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+          {[
+            ["Customer Strategy",     r.gapAnalysis.customerStrategy,  C.accent],
+            ["Brand Equity",          r.gapAnalysis.brandEquity,       C.purple],
+            ["Commercial Execution",  r.gapAnalysis.commercial,         C.accentB],
+          ].map(([label, g, col])=> g ? (
+            <GapCard key={label} label={label} g={g} col={col}/>
+          ) : null)}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+          {[
+            ["Digital & Cx",          r.gapAnalysis.digital,            C.gold],
+            ["Data & Personalisation",r.gapAnalysis.dataPersonalisation, C.orange],
+          ].map(([label, g, col])=> g ? (
+            <GapCard key={label} label={label} g={g} col={col}/>
+          ) : null)}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+          {[
+            ["Service & Retention",   r.gapAnalysis.serviceRetention,   C.green],
+            ["Community & Advocacy",  r.gapAnalysis.communityAdvocacy,  C.accentB],
+          ].map(([label, g, col])=> g ? (
+            <GapCard key={label} label={label} g={g} col={col}/>
+          ) : null)}
+          </div>
         </>
       )}
 
