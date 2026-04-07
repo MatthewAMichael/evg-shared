@@ -1,8 +1,4 @@
-// Vercel Fluid Compute — no timeout issues for long AI responses
-export const config = {
-  runtime: "nodejs",
-  maxDuration: 300,
-};
+// api/chat.js — Vercel Pro proxy with password protection
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -12,22 +8,31 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  // Password check
-  const { password, ...body } = typeof req.body === "string"
-    ? JSON.parse(req.body) : req.body;
-
-  if (!process.env.ACCESS_PASSWORD) {
-    return res.status(500).json({ error: "ACCESS_PASSWORD not configured" });
+  // Parse body
+  let body;
+  try {
+    body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+  } catch(e) {
+    return res.status(400).json({ error: "Invalid JSON" });
   }
-  if (password !== process.env.ACCESS_PASSWORD) {
-    return res.status(401).json({ error: "Invalid password" });
+
+  // Extract password from body
+  const { password, ...anthropicBody } = body;
+
+  // Check environment variables
+  if (!process.env.ACCESS_PASSWORD) {
+    return res.status(500).json({ error: "ACCESS_PASSWORD not configured on server" });
   }
   if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured" });
+    return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured on server" });
+  }
+
+  // Validate password — trim both sides to avoid whitespace issues
+  if ((password || "").trim() !== process.env.ACCESS_PASSWORD.trim()) {
+    return res.status(401).json({ error: "Invalid password" });
   }
 
   try {
-    // Use Anthropic streaming to keep connection alive
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -35,7 +40,7 @@ module.exports = async function handler(req, res) {
         "anthropic-version": "2023-06-01",
         "x-api-key": process.env.ANTHROPIC_API_KEY,
       },
-      body: JSON.stringify({ ...body, stream: true }),
+      body: JSON.stringify({ ...anthropicBody, stream: true }),
     });
 
     res.setHeader("Content-Type", "text/event-stream");

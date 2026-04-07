@@ -138,7 +138,7 @@ RULES: All strings 1 sentence max. capabilityGaps 3 items, interventions 2 each.
 
 // ─── API — proxy call with password, SSE streaming ──────────────────────────
 async function callClaude(system, user, onDone, onError) {
-  const password = sessionStorage.getItem("evg-password") || "";
+  const password = localStorage.getItem("evg-password") || "";
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -342,8 +342,8 @@ function RadarChart({data,weights,size=185}) {
 // MAIN APP
 // ═══════════════════════════════════════════════════════════════════════════
 export default function App() {
-  const [password,   setPassword]   = useState(sessionStorage.getItem("evg-password")||"");
-  const [authed,     setAuthed]      = useState(!!sessionStorage.getItem("evg-password"));
+  const [password,   setPassword]   = useState(localStorage.getItem("evg-password")||"");
+  const [authed,     setAuthed]      = useState(!!localStorage.getItem("evg-password"));
   const [pwError,    setPwError]     = useState(false);
   const [analyses,   setAnalyses]   = useState([]);
   const [activeId,   setActiveId]   = useState(null);
@@ -446,7 +446,7 @@ export default function App() {
       },
       (msg)=>{
         setLoading(false);
-        if(msg==="AUTH_FAILED"){ setAuthed(false); sessionStorage.removeItem("evg-password"); }
+        if(msg==="AUTH_FAILED"){ setAuthed(false); localStorage.removeItem("evg-password"); }
         else setError(msg);
       }
     );
@@ -646,7 +646,7 @@ export default function App() {
                       onChange={e=>{ setPassword(e.target.value); setPwError(false); }}
                       onKeyDown={e=>{
                         if(e.key==="Enter"&&password){
-                          sessionStorage.setItem("evg-password",password);
+                          localStorage.setItem("evg-password",password);
                           setAuthed(true); setPwError(false);
                         }
                       }}
@@ -665,7 +665,7 @@ export default function App() {
                     <button
                       onClick={()=>{
                         if(password){
-                          sessionStorage.setItem("evg-password",password);
+                          localStorage.setItem("evg-password",password);
                           setAuthed(true); setPwError(false);
                         }
                       }}
